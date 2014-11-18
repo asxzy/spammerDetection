@@ -22,6 +22,7 @@ for dataset in ['weibo','twitter']:
     config.set(dataset,'nearDuplicatesJS','%(dir)s/%(name)s-%(top)s-%(threshold)s-nearDuplicates.js')
     config.set(dataset,'clusters','%(dir)s/%(name)s-%(top)s-%(threshold)s.clusters')
     config.set(dataset,'db','137.207.234.79')
+    config.set(dataset,'dendrogram','%(dir)s/%(name)s-%(top)s-%(threshold)s.dendrogram')
 
 with open('datasets.cfg','wb') as f:
     config.write(f)

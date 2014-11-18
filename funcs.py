@@ -2,9 +2,18 @@
 import ConfigParser
 import io
 import pprint
+import sys
 
 c = ConfigParser.ConfigParser()
 c.read('datasets.cfg')
+
+def findJS(data):
+    fout = io.open(c.get(data,'thresholdJS'),'wb')
+    with io.open(c.get(data,'js')) as f:
+        for line in f:
+            if float(line.split()[2]) > float(c.get(data,'threshold')):
+                fout.write(line)
+    fout.close()
 
 def findNearDuplicates(data):
     nd = {}
@@ -61,7 +70,7 @@ def findSeedDegree(data):
             try:
                 out = [node['node_id']]
             except TypeError:
-                print n,'not exsits'
+                #print n,'not exsits'
                 node = {}
                 out = [n]
                 node['friends_count'] = degree[n][0]
@@ -154,13 +163,18 @@ def findNearDuplicatesJS(data):
     with io.open(c.get(data,'js')) as f:
         for l in f:
             line = l.split()
-            i = int(line[0])
-            j = int(line[1])
+            try:
+                i = int(line[0])
+                j = int(line[1])
+            except:
+                print line
+                continue
+                #sys.exit()
             if i in Dnd and j in Dnd:
                 fout.write(l)
     fout.close()
  
-def findCluster(data,color_threshold=None):
+def findCluster(data,color_threshold=None,showPlot=False):
     nd = getNearDuplicates(data)
     Dnd = {}
     for i in range(len(nd)):
@@ -185,6 +199,15 @@ def findCluster(data,color_threshold=None):
     import scipy.cluster.hierarchy
     #Z = scipy.cluster.hierarchy.linkage(pdist,method='average')
     Z = scipy.cluster.hierarchy.average(pdist)
-    R = scipy.cluster.hierarchy.dendrogram(Z,color_threshold=color_threshold,show_leaf_counts=True)
-    from matplotlib.pyplot import show
-    show()
+    fout = io.open(c.get(data,'dendrogram'),'wb')
+    for z in Z:
+        z = z.tolist()
+        z[0] = int(z[0]+1)
+        z[1] = int(z[1]+1)
+        z = [str(x) for x in z]
+        fout.write("\t".join(z[:3])+"\n")
+    fout.close()
+    if showPlot:
+        R = scipy.cluster.hierarchy.dendrogram(Z,color_threshold=color_threshold,show_leaf_counts=True)
+        from matplotlib.pyplot import show
+        show()
