@@ -16,14 +16,14 @@ def findJS(data):
     fout.close()
 
 def findNearDuplicates(data):
-    nd = {}
+    nds = {}
     with io.open(c.get(data,'thresholdJS')) as f:
         for line in f:
             line = line.split()
-            nd[int(line[0])] = None
-            nd[int(line[1])] = None
+            nds[int(line[0])] = None
+            nds[int(line[1])] = None
 
-    print 'number of near duplicates:',len(nd)
+    print 'number of near duplicates:',len(nds)
     with io.open(c.get(data,'nearDuplicates'),'wb') as f:
         for n in sorted(nd.keys()):
             f.write(str(n))
@@ -31,11 +31,11 @@ def findNearDuplicates(data):
     print 'done' 
 
 def getNearDuplicates(data):
-    nd = []
+    nds = []
     with io.open(c.get(data,'nearDuplicates')) as f:
         for line in f:
-            nd.append(int(line))
-    return nd
+            nds.append(int(line))
+    return nds
 
 def findSeedList(data):
     nodes = {}
@@ -134,14 +134,14 @@ def getNodeDegree(data):
 
 def findSpammers(data):
     spammers = {}
-    nd = {}
+    nds = {}
     with io.open(c.get(data,'nearDuplicates')) as f:
         for line in f:
             nd[int(line)] = None
     with io.open(c.get(data,'graph')) as f:
         for line in f:
             line = line.split()
-            if int(line[1]) in nd:
+            if int(line[1]) in nds:
                 spammers[int(line[0])] = None
     print 'number of spammers:',len(spammers)
     with io.open(c.get(data,'spammers'),"wb") as f:
@@ -175,14 +175,12 @@ def findNearDuplicatesJS(data):
     fout.close()
  
 def findCluster(data,color_threshold=None,showPlot=False):
-    nd = getNearDuplicates(data)
+    nds = getNearDuplicates(data)
     Dnd = {}
-    for i,j in enumerate(nd):
-        print i,j
-        Dnd[int(nd[i])] = i
-    sys.exit()
+    for i,j in enumerate(nds):
+        Dnd[j] = i
 
-    matrix = [[0 for i in range(len(nd))] for j in range(len(nd))]
+    matrix = [[0 for i in range(len(nds))] for j in range(len(nds))]
 
     with io.open(c.get(data,'nearDuplicatesJS')) as f:
         for line in f:
@@ -191,7 +189,7 @@ def findCluster(data,color_threshold=None,showPlot=False):
             j = int(line[1])
             matrix[Dnd[i]][Dnd[j]] = float(line[2])
             matrix[Dnd[j]][Dnd[i]] = float(line[2])
-    for i in range(len(nd)):
+    for i in range(len(nds)):
         matrix[i][i] = "1"
     
     pdist = []
@@ -214,11 +212,43 @@ def findCluster(data,color_threshold=None,showPlot=False):
         from matplotlib.pyplot import show
         show()
 
-#def getCluster(data,threshold):
-#    names = {}
-#    with io.open(c.get(data,'dendrogram')) as f:
-#        for line in f:
-#            line = line.split()
-#            if float(line[2]) > threshold:
-#                name[]
-#
+def getCluster(data,threshold):
+    dendrogram = {}
+    nds = getNearDuplicates(data)
+    with io.open(c.get(data,'dendrogram')) as f:
+        count = 0
+        for line in f:
+            count += 1
+            line = line.split()
+            if float(line[2]) > threshold:
+                break
+            dendrogram[count+len(nds)] = [int(line[0]),int(line[1])]
+    count = 0
+    flag = True
+    while flag:
+        count += 1
+        flag = False
+        keys = sorted(dendrogram.keys())
+        keys.reverse()
+        for key in keys:
+            value = dendrogram[key]
+            value.sort()
+            value.reverse()
+            for v in value:
+                if v > len(nds):
+                    tmp = value
+                    del(tmp[tmp.index(v)])
+                    dendrogram[v] += tmp
+                    flag = True
+                    break
+            if flag:
+                del(dendrogram[key])
+                break
+
+    clusters = []
+    for key in dendrogram:
+        clusters.append(dendrogram[key])
+    clusters.sort(key=lambda x : len(x))
+    with io.open(c.get(data,'clusters'),'wb') as f:
+        for cluster in clusters:
+            f.write("\t".join([str(nds[x-1]) for x in cluster])+"\n")
