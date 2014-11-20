@@ -177,8 +177,10 @@ def findNearDuplicatesJS(data):
 def findCluster(data,color_threshold=None,showPlot=False):
     nd = getNearDuplicates(data)
     Dnd = {}
-    for i in range(len(nd)):
+    for i,j in enumerate(nd):
+        print i,j
         Dnd[int(nd[i])] = i
+    sys.exit()
 
     matrix = [[0 for i in range(len(nd))] for j in range(len(nd))]
 
@@ -211,3 +213,12 @@ def findCluster(data,color_threshold=None,showPlot=False):
         R = scipy.cluster.hierarchy.dendrogram(Z,color_threshold=color_threshold,show_leaf_counts=True)
         from matplotlib.pyplot import show
         show()
+
+#def getCluster(data,threshold):
+#    names = {}
+#    with io.open(c.get(data,'dendrogram')) as f:
+#        for line in f:
+#            line = line.split()
+#            if float(line[2]) > threshold:
+#                name[]
+#
