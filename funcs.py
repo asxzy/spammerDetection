@@ -212,7 +212,7 @@ def findCluster(data,color_threshold=None,showPlot=False):
         from matplotlib.pyplot import show
         show()
 
-def getCluster(data,threshold):
+def findCluster(data,threshold):
     dendrogram = {}
     nds = getNearDuplicates(data)
     with io.open(c.get(data,'dendrogram')) as f:
@@ -252,3 +252,12 @@ def getCluster(data,threshold):
     with io.open(c.get(data,'clusters'),'wb') as f:
         for cluster in clusters:
             f.write("\t".join([str(nds[x-1]) for x in cluster])+"\n")
+
+def getClusters(data):
+    clusters = []
+    with io.open(c.get(data,'clusters')) as f:
+        for line in f:
+            clusters.append([int(x) for x in line.split()])
+    return clusters
+
+
