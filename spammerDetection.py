@@ -13,11 +13,18 @@ if __name__ == '__main__':
     #findSeedList(data)
     #print "seed degree"
     #findSeedDegree(data)
-    print "filter JS"
-    findJS(data)
-    print "ND"
-    findNearDuplicates(data)
-    print "spammer"
-    findSpammers(data)
-    print "ndjs"
-    findNearDuplicatesJS(data)
+    #print "filter JS"
+    #findJS(data)
+    #print "ND"
+    #findNearDuplicates(data)
+    #print "spammer"
+    #findSpammers(data)
+    #print "ndjs"
+    #findNearDuplicatesJS(data)
+    #print "spammerGraph"
+    #findSpammerGraph(data)
+    #print "spammer"
+    #findSpammers(data)
+    print "clusterSpammer"
+    findClusterSpammers(data)
+

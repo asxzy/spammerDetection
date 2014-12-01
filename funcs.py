@@ -131,18 +131,38 @@ def getNodeDegree(data):
             nodes[line[0]] = (line[1],line[2])
     return nodes
 
-
-def findSpammers(data):
-    spammers = {}
-    nds = {}
-    with io.open(c.get(data,'nearDuplicates')) as f:
-        for line in f:
-            nd[int(line)] = None
+def findSpammerGraph(data):
+    spammers = {}.fromkeys(getNearDuplicates(data))
+    fout = io.open(c.get(data,'spammerGraph'),'wb')
     with io.open(c.get(data,'graph')) as f:
         for line in f:
             line = line.split()
-            if int(line[1]) in nds:
-                spammers[int(line[0])] = None
+            if int(line[1]) in spammers:
+                fout.write("\t".join(line)+"\n")
+
+def findSpammers(data):
+    spammers = {}
+    nds = []
+    with io.open(c.get(data,'thresholdJS')) as f:
+        for line in f:
+            line = line.split()
+            nds.append({}.fromkeys([int(line[0]),int(line[1])]))
+    count = 0
+    for nd in nds:
+        count += 1
+        print 'doing nd',count,nd
+        tmp_spammers = {}
+        with io.open(c.get(data,'spammerGraph')) as f:
+            for line in f:
+                line = line.split()
+                if int(line[1]) in nd:
+                    try:
+                        tmp_spammers[int(line[0])] += 1
+                    except:
+                        tmp_spammers[int(line[0])] = 1
+        for spammer in tmp_spammers.keys():
+            if tmp_spammers[spammer] == len(nd):
+                spammers[spammer] = None
     print 'number of spammers:',len(spammers)
     with io.open(c.get(data,'spammers'),"wb") as f:
         for n in sorted([int(x) for x in spammers.keys()]):
@@ -156,6 +176,14 @@ def getSpammers(data):
         for line in f:
             spammers.append(int(line))
     return spammers
+
+def getSpammersGroundTrue(data):
+    spammers = []
+    with io.open(c.get(data,'spammers')+".groundTrue") as f:
+        for line in f:
+            spammers.append(int(line))
+    return spammers
+
 
 def findNearDuplicatesJS(data):
     Dnd = {}.fromkeys([int(x) for x in getNearDuplicates(data)])
@@ -261,3 +289,37 @@ def getClusters(data):
     return clusters
 
 
+
+def findClusterSpammers(data):
+    clusters = getClusters(data)
+    fout = io.open(c.get(data,'clusterSpammers'),"wb")
+    spammers = {}.fromkeys(getSpammers(data))
+    count = 0
+    for cluster in clusters:
+        out = []
+        count += 1
+        print 'doing cluster',count
+        nds = {}.fromkeys(cluster)
+        with io.open(c.get(data,'spammerGraph')) as f:
+            for line in f:
+                line = line.split()
+                if int(line[1]) in cluster and int(line[0]) in spammers:
+                    out.append(int(line[0]))
+        out.sort()
+        fout.write("\t".join([str(x) for x in out])+"\n")
+    fout.close()
+    print 'done'
+
+def getClusterSpammers(data):
+    cluster = []
+    with io.open(c.get(data,'clusterSpammers')) as f:
+        for line in f:
+            cluster.append([int(x) for x in line.split()])
+    return cluster
+
+def getClusterSpammersGroundTrue(data):
+    cluster = []
+    with io.open(c.get(data,'clusterSpammers')+".groundTrue") as f:
+        for line in f:
+            cluster.append([int(x) for x in line.split()])
+    return cluster

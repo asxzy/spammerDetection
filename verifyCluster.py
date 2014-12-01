@@ -35,7 +35,7 @@ def getTop(ATTR,i=-1):
         #else:
         #    print "cluster",index
         spammers = {}
-        with io.open('../twitterCrawler/nd.spammers') as f:
+        with io.open('spammersCluster.txt') as f:
             count = 0
             for line in f:
                 if count == i:
@@ -43,13 +43,20 @@ def getTop(ATTR,i=-1):
                         spammers[int(spammer)] = None
                     break
                 count += 1
+        #print len(cluster),len(spammers)
+        #return
         infos = []
         for spammer in spammers:
             node = NODES.find_one({"id":spammer})
             if node == None:
-                print 'spammer',spammer,'not found'
-                sys.exit()
-            if ATTR == "created_at":
+                #print 'spammer',spammer,'not found'
+                continue
+                #sys.exit()
+            if ATTR == 'location':
+                if len(node['location']) == 0:
+                    node['location'] = "Unknown"
+                infos.append(node[ATTR])
+            elif ATTR == "created_at":
                 t = time.strptime(node['created_at'],'%a %b %d %H:%M:%S +0000 %Y')
                 t = time.mktime(t)
                 t = datetime.fromtimestamp(t).strftime("%Y-%m")
@@ -89,8 +96,8 @@ def getTop(ATTR,i=-1):
             break
  
 if __name__ == "__main__":
-    print sys.argv[1],
-    for a in ["location","created_at","friends_count","followers_count","statuses_count"]:
+    #print sys.argv[1],
+    for a in ["protected","location","created_at","friends_count","followers_count","statuses_count"]:
         if len(sys.argv) > 0:
             print "\n",a,
             for i in sys.argv[1:]:
@@ -100,3 +107,4 @@ if __name__ == "__main__":
     print "\\\\"
 #    for i in sys.argv[1:]:
 #        distinctTargets(int(i)-1)
+    
