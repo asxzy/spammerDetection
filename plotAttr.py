@@ -9,7 +9,7 @@ import time
 from random import randint,shuffle
 
 
-def random_nodes(n = 20000):
+def random_nodes(n = 50000):
     conn = pymongo.Connection("localhost")
     db = conn.twitter
     NODES = db.nodes
@@ -19,19 +19,24 @@ def random_nodes(n = 20000):
     '''
     random attributes
     '''
-    infos = []
     rand = []
     with io.open("/Volumes/Data/asxzy/datasets/spammer/twitter/twitter.randomNodes") as f:
         for line in f:
             rand.append(int(line))
 
-    for attr in ['created_at','friends_count','followers_count','statuses_count']:
-        for node_id in rand:
-            node = NODES.find_one({"id":node_id})
-            if node == None:
-                print node_id
-                sys.exit()
-        #for node in NODES.find({"id":{"$in":rand[:n]}}):
+    shuffle(rand)
+    spammers = []
+    for node_id in rand[:n]:
+        node = NODES.find_one({"id":node_id})
+        if node == None:
+            print "missing",node_id
+            continue
+        spammers.append(node)
+
+ 
+    for attr in ['lang','created_at','friends_count','followers_count','statuses_count']:
+        infos = []
+        for node in spammers:
             if attr == 'created_at':
                 t = time.strptime(node['created_at'],'%a %b %d %H:%M:%S +0000 %Y')
                 t = time.mktime(t)
@@ -69,7 +74,7 @@ def random_nodes(n = 20000):
 
 
 
-def plot(cluster,i,n=20000):
+def plot(cluster,i,n=50000):
     conn = pymongo.Connection("localhost")
     db = conn.twitter
     NODES = db.spammers
@@ -85,17 +90,20 @@ def plot(cluster,i,n=20000):
         count += 1
 
     shuffle(zbs)
-    print len(zbs)
     '''
     zbs attributes
     '''
-    for attr in ['created_at','friends_count','followers_count','statuses_count']:
+    spammers = []
+    for node_id in zbs[:n]:
+        node = NODES.find_one({"id":node_id})
+        if node == None:
+            print "missing",node_id
+            continue
+        spammers.append(node)
+
+    for attr in ['lang','created_at','friends_count','followers_count','statuses_count']:
         infos = []
-        for node_id in zbs[:n]:
-            node = NODES.find_one({"id":node_id})
-            if node == None:
-                print "missing",node_id
-                continue
+        for node in spammers:
             if attr == 'created_at':
                 t = time.strptime(node['created_at'],'%a %b %d %H:%M:%S +0000 %Y')
                 t = time.mktime(t)
@@ -122,8 +130,10 @@ def plot(cluster,i,n=20000):
                 index += 1
                 f.write(str(index))
                 f.write("\t")
-                #f.write(str(key.encode("utf-8")))
-                f.write(str(key))
+                if attr == 'lang':
+                    f.write(str(key.encode("utf-8")))
+                else:
+                    f.write(str(key))
                 f.write("\t")
                 try:
                     f.write(str(count[key]*1.0/len(infos)))

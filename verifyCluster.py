@@ -24,6 +24,7 @@ def getTop(ATTR,i=-1):
 #
     clusters = getClusters('twitter')
 
+    log = io.open('missingSpammers.txt','ab')
     index = 0
     if i > -1:
         clusters = [clusters[i]]
@@ -62,7 +63,11 @@ def getTop(ATTR,i=-1):
                 t = datetime.fromtimestamp(t).strftime("%Y-%m")
                 infos.append(t)
             else:
-                infos.append(node[ATTR])
+                try:
+                    infos.append(node[ATTR])
+                except:
+                    log.write(str(node['id']))
+                    continue
         infos.sort()
         count = {}
         for info in infos:
@@ -97,14 +102,14 @@ def getTop(ATTR,i=-1):
  
 if __name__ == "__main__":
     #print sys.argv[1],
-    for a in ["protected","location","created_at","friends_count","followers_count","statuses_count"]:
+    for a in ["protected","location","created_at","friends_count","followers_count","statuses_count","lang"]:
         if len(sys.argv) > 0:
-            print "\n",a,
+            print a,
             for i in sys.argv[1:]:
                 getTop(a,int(i)-1)
+            print "\\\\"
         else:
             getTop(a)
-    print "\\\\"
 #    for i in sys.argv[1:]:
 #        distinctTargets(int(i)-1)
     
