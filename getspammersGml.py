@@ -3,21 +3,20 @@ import io,sys
 import math
 import pymongo
 from random import shuffle
+from funcs import *
 import networkx
 
 Graph = networkx.DiGraph()
 
 
 conn = pymongo.Connection()
-db = conn.sina
+db = conn.twitter
 NODES = db.nodes
 EDGES = db.edges
 
 print sys.argv[1]
 clusters = []
-with io.open('/Users/asxzy/datasets/weibo.395.cluster') as f:
-    for line in f:
-        clusters.append([int(x) for x in line.split()])
+clusters = getClusters('twitter')
 
 cluster = clusters[int(sys.argv[1])-1]
 spammers = {}
