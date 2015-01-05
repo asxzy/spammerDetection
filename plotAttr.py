@@ -1,10 +1,11 @@
-#!/usr/bin/env pypy
+#!/usr/bin/env python
 from funcs import *
 import io
 import sys
 import os
 import pymongo
 from datetime import datetime
+from dateutil import rrule
 import time
 from random import randint,shuffle
 
@@ -34,42 +35,28 @@ def random_nodes(n = 50000):
         spammers.append(node)
 
  
-    for attr in ['lang','created_at','friends_count','followers_count','statuses_count']:
+    #for attr in ['lang','created_at','friends_count','followers_count','statuses_count']:
+    for attr in ['protected']:
+        f = io.open("/Volumes/Data/asxzy/datasets/spammer/twitter/cluster/"+attr+"/random.tab","wb")
         infos = []
         for node in spammers:
             if attr == 'created_at':
                 t = time.strptime(node['created_at'],'%a %b %d %H:%M:%S +0000 %Y')
                 t = time.mktime(t)
-                node['created_at'] = datetime.fromtimestamp(t).strftime("%Y-%m")
+                t = datetime.fromtimestamp(t)
+                s = time.strptime('200607','%Y%m')
+                s = time.mktime(s)
+                s = datetime.fromtimestamp(s)
+                node['created_at'] = rrule.rrule(rrule.WEEKLY, dtstart=s, until=t).count()
+
             elif attr == 'location':
                 if len(node[attr]) == 0:
                     node[attr] == 'Unknown'
-            infos.append(node[attr])
-        print "len infos",len(infos)
-        infos.sort()
-
-        sortedKey = sorted(set(infos))
-
-        for info in infos:
             try:
-                count[info]
+                f.write(str(node[attr])+'\n')
             except:
-                count[info] = 0
-            count[info] += 1
-
-        with io.open("/Volumes/Data/asxzy/datasets/spammer/twitter/cluster/"+attr+"/random.tab","wb") as f:
-            index = 0
-            for key in sortedKey:
-                index += 1
-                f.write(str(index))
-                f.write("\t")
-                f.write(unicode(key))
-                f.write("\t")
-                try:
-                    f.write(str(count[key]*1.0/len(infos)))
-                except:
-                    f.write("0")
-                f.write("\n")
+                f.write(str(node[attr].encode('utf-8'))+'\n')
+        f.close()
         print "Done",attr
 
 
@@ -101,45 +88,26 @@ def plot(cluster,i,n=50000):
             continue
         spammers.append(node)
 
-    for attr in ['lang','created_at','friends_count','followers_count','statuses_count']:
+    #for attr in ['lang','created_at','friends_count','followers_count','statuses_count']:
+    for attr in ['protected']:
+        f = io.open("/Volumes/Data/asxzy/datasets/spammer/twitter/cluster/"+attr+"/"+"%02d"%(i+1)+".tab","wb")
         infos = []
         for node in spammers:
             if attr == 'created_at':
                 t = time.strptime(node['created_at'],'%a %b %d %H:%M:%S +0000 %Y')
                 t = time.mktime(t)
-                node['created_at'] = datetime.fromtimestamp(t).strftime("%Y-%m")
+                t = datetime.fromtimestamp(t)
+                s = time.strptime('200607','%Y%m')
+                s = time.mktime(s)
+                s = datetime.fromtimestamp(s)
+                node['created_at'] = rrule.rrule(rrule.WEEKLY, dtstart=s, until=t).count()
             elif attr == 'location':
                 if len(node[attr]) == 0:
                     node[attr] == 'Unknown'
-            infos.append(node[attr])
-        print "len infos",len(infos)
-        infos.sort()
-
-        sortedKey = sorted(set(infos))
-
-        count = {}
-        for info in infos:
             try:
-                count[info]
+                f.write(str(node[attr])+'\n')
             except:
-                count[info] = 0
-            count[info] += 1
-        with io.open("/Volumes/Data/asxzy/datasets/spammer/twitter/cluster/"+attr+"/"+"%02d"%(i+1)+".tab","wb") as f:
-            index = 0
-            for key in sortedKey:
-                index += 1
-                f.write(str(index))
-                f.write("\t")
-                if attr == 'lang':
-                    f.write(str(key.encode("utf-8")))
-                else:
-                    f.write(str(key))
-                f.write("\t")
-                try:
-                    f.write(str(count[key]*1.0/len(infos)))
-                except:
-                    f.write("0")
-                f.write("\n")
+                f.write(str(node[attr].encode('utf-8'))+'\n')
         print "Done",i,attr
 
 if __name__ == "__main__":

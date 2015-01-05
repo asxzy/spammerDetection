@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import sys,io
-sys.path.append('/Volumes/Data/asxzy/github/spammerDetection/twitterCrawler')
+sys.path.append('/Volumes/Data/asxzy/github/twitterCrawler')
+import pymongo
 from twitter import *
-from pprint import pprint
-from random import randint
+from random import randint,shuffle
 from funcs import *
 
 userHitCount = 0
@@ -26,6 +26,7 @@ def hitFollowersList(worker,uid):
     except Exception, e:
         print e
     return flist,finfos
+
 
 def hitFriendsIDs(worker,uid):
     flist = []
@@ -54,39 +55,52 @@ def hitUser(worker,userIdList):
         print e
     return users
 
+IDS1 = Twitter("friends","/friends/ids")
+LISTS1 = Twitter("friends","/friends/list")
+
+IDS2 = Twitter("followers","/followers/ids")
+LISTS2 = Twitter("followers","/followers/list")
+
+URN = Twitter("users","/users/lookup")
+SPAMMERS = {}.fromkeys(getSpammersGroundTrue('twitter'))
+
+def run(i):
+    log = io.open('innerLoopTargets.log','ab')
+    spammers = getClusterSpammersGroundTrue('twitter')[i]
+    NODES = pymongo.Connection().twitter.spammers
+    shuffle(spammers)
+    Aspammers = {}.fromkeys(spammers)
+    sFollowers = {}
+    count = 0
+    for spammer in spammers[:1000]:
+        InLinks = 0
+        inDeg = 0
+        targets = {}
+        node = NODES.find_one({"id":spammer})
+        # s => t
+        if node["friends_count"] > 200:
+            friendList = hitFriendsIDs(IDS1,spammers)
+        else:
+            friendList,friendInfos = hitFriendsList(LISTS1,spammer)
+        for friend in friendList:
+            targets[friend] = None
+        # s <= t
+        if node["followers_count"] > 200:
+            followerList = hitFollowersIDs(IDS1,spammers)
+        else:
+            followerList,followerInfos = hitFollowersList(LISTS1,spammer)
+        for follower in followerList:
+            inDeg += 1
+            if follower in targets:
+                InLinks += 1
+        print i,InLinks,inDeg,len(targets)
+        log.write(str(i+1)+"\t")
+        log.write("InLinks\t"+str(InLinks)+"\t")
+        log.write("InDegree\t"+str(inDeg)+"\t")
+        log.write("targets\t"+str(len(targets))+"\n")
+        log.flush()
+    log.close()
 
 if __name__ == '__main__':
-    i = 4
-    IDS = Twitter("followers","/followers/ids")
-    LISTS= Twitter("followers","/followers/list")
-    URN = Twitter("users","/users/lookup")
-    users = {}
-    fgraph = io.open('spammerCluster'+str(i)+'.graph','wb')
-    fusers = io.open('spammerCluster'+str(i)+'.json','wb')
-    fseeds = io.open('spammerCluster'+str(i)+'.txt','wb')
-    log = io.open('spammerCluster'+str(i)+'.log','wb')
-    spammers = {}.fromkeys(getClusterSpammersGroundTrue('twitter')[i-1])
-    for spammer in spammers:
-        followerList = hitFriendsIDs(IDS,spammer)
-        userIdList = []
-        for follower in followerList:
-            fgraph.write(str(spammer)+"\t"+str(follower)+"\n")
-            fgraph.flush()
-            if len(userIdList) < 100:
-                userIdList.append(str(follower))
-                continue
-            userList = hitUser(URN,userIdList)
-            for u in userList:
-                fusers.write(json.dumps(u)+"\n")
-                fusers.flush()
-            userIdList = []
-        if len(userIdList) > 0:
-            userList = hitUser(URN,userIdList)
-            for u in userList:
-                fusers.write(json.dumps(u)+"\n")
-                fusers.flush()
-        log.write(str(spammer)+"\n")
-        log.flush()
-    fgraph.close()
-    fusers.close()
-    log.close()
+    for i in range(16):
+        run(i)
