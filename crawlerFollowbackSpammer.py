@@ -71,35 +71,38 @@ LISTS2 = Twitter("followers","/followers/list")
 
 URN = Twitter("users","/users/show/:id")
 
-log = io.open('innerLoopGlobal.log','ab')
-users = []
-#with io.open('/Volumes/Data/asxzy/datasets/spammer/twitter/twitter.topOut20000') as f:
-with io.open('/Volumes/Data/asxzy/datasets/spammer/twitter/twitter.randomNodes') as f:
-    for line in f:
-        users.append(int(line.split()[0]))
-#shuffle(users)
-count = 0
-for user in users[:10000]:
-    userInfo = hitUser(URN,user)
-    if userInfo["protected"]:
+log = io.open('innerLoopSpammer.log','ab')
+clusters = getClusterSpammers('twitter')
+for i,users in enumerate(clusters):
+    if i < 7:
         continue
-    InLinks = 0
-    inDeg = 0
-    targets = {}
-    # s => t
-    friendList = hitFriendsIDs(IDS1,user)
-    for friend in friendList:
-        targets[friend] = None
-    # s <= t
-    followerList = hitFollowersIDs(IDS2,user)
-    for follower in followerList:
-        inDeg += 1
-        if follower in targets:
-            InLinks += 1
-    print user,InLinks,inDeg,len(targets),userInfo["followers_count"],userInfo["friends_count"]
-    log.write(str(user)+"\t")
-    log.write("InLinks\t"+str(InLinks)+"\t")
-    log.write("followers_count\t"+str(userInfo["followers_count"])+"\t")
-    log.write("friends_count\t"+str(userInfo["friends_count"])+"\n")
-    log.flush()
+    count = 0
+    shuffle(users)
+    for user in users[:100]:
+        userInfo = hitUser(URN,user)
+        try:
+            if userInfo["protected"]:
+                continue
+        except:
+            continue
+        InLinks = 0
+        inDeg = 0
+        targets = {}
+        # s => t
+        friendList = hitFriendsIDs(IDS1,user)
+        for friend in friendList:
+            targets[friend] = None
+        # s <= t
+        followerList = hitFollowersIDs(IDS2,user)
+        for follower in followerList:
+            inDeg += 1
+            if follower in targets:
+                InLinks += 1
+        print i,user,InLinks,inDeg,len(targets),userInfo["followers_count"],userInfo["friends_count"]
+        log.write(str(i)+"\t")
+        #log.write(str(user)+"\t")
+        log.write("InLinks\t"+str(InLinks)+"\t")
+        log.write("followers_count\t"+str(userInfo["followers_count"])+"\t")
+        log.write("friends_count\t"+str(userInfo["friends_count"])+"\n")
+        log.flush()
 log.close()

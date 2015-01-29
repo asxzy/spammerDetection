@@ -17,14 +17,12 @@ if __name__ == '__main__':
     #findJS(data)
     #print "ND"
     #findNearDuplicates(data)
-    #print "spammer"
-    #findSpammers(data)
     #print "ndjs"
     #findNearDuplicatesJS(data)
-    #print "spammerGraph"
-    #findSpammerGraph(data)
-    #print "spammer"
-    #findSpammers(data)
+    print "spammerGraph"
+    findSpammerGraph(data)
+    print "spammer"
+    findSpammers(data)
     print "clusterSpammer"
     findClusterSpammers(data)
 

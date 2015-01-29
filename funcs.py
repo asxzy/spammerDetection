@@ -25,7 +25,7 @@ def findNearDuplicates(data):
 
     print 'number of near duplicates:',len(nds)
     with io.open(c.get(data,'nearDuplicates'),'wb') as f:
-        for n in sorted(nd.keys()):
+        for n in sorted(nds.keys()):
             f.write(str(n))
             f.write('\n')
     print 'done' 
