@@ -89,13 +89,13 @@ while len(users) < 1000000:
         if user["protected"] or user['followers_count'] == 0 or user['friends_count'] == 0:
             continue
         users.append(user)
-        friendList = hitFriendsIDs(IDS1,user)
-        followerList = hitFollowersIDs(IDS2,user)
+        friendList = hitFriendsIDs(IDS1,user['id'])
+        followerList = hitFollowersIDs(IDS2,user['id'])
         reciprocity = len(Set(friendList) & Set(followerList))
-        print user,reciprocity,user["followers_count"],user["friends_count"]
-        log.write(str(i)+"\t")
+        print user['id'],reciprocity,len(friendList),len(followerList)
+        log.write(str(user['id'])+"\t")
         log.write(str(reciprocity)+"\t")
-        log.write(str(user["followers_count"])+"\t")
-        log.write(str(user["friends_count"])+"\n")
+        log.write(str(len(friendList))+"\t")
+        log.write(str(len(followerList))+"\n")
         log.flush()
 log.close()
